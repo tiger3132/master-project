@@ -22,6 +22,7 @@ class Decoder(nn.Module):
 class LitAutoEncoder(pl.LightningModule):
     def __init__(self, encoder, decoder):
         super().__init__()
+        self.save_hyperparameters()
         self.encoder = encoder
         self.decoder = decoder
 

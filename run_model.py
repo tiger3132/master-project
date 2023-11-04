@@ -8,6 +8,7 @@ import torch
 import torch.utils.data as data
 
 def main():
+    """
     # Load datasets
     transform = transforms.ToTensor()
     train_set = datasets.MNIST(root="MNIST", download=True, train=True, transform=transform)
@@ -27,7 +28,19 @@ def main():
     trainer = pl.Trainer(max_epochs=1)
     trainer.fit(model=autoencoder, train_dataloaders=DataLoader(train_set), val_dataloaders=DataLoader(valid_set))
     # test the model
-    trainer.test(model=autoencoder, dataloaders=DataLoader(test_set))
+    # trainer.test(model=autoencoder, dataloaders=DataLoader(test_set))
+    trainer.save_checkpoint("model.ckpt")
+    """
+    
+    transform = transforms.ToTensor()
+    test_set = datasets.MNIST(root="MNIST", download=True, train=False, transform=transform)
+    autoencoder = LitAutoEncoder.load_from_checkpoint("C:/Users/student/masters_project/model.ckpt")
+    # C:/Users/student/masters_project/lightning_logs/version_5/checkpoints/epoch=0-step=48000.ckpt
+    trainer = pl.Trainer(max_epochs=1)
+    trainer.test(model=autoencoder, dataloaders=test_set)
+    checkpoint = torch.load("C:/Users/student/masters_project/model.ckpt")
+    print(checkpoint["hyper_parameters"])
+    
 
 if __name__ == '__main__':
     main()
