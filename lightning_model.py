@@ -2,6 +2,7 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 import lightning.pytorch as pl
+import torchvision.models as models
 
 class Encoder(nn.Module):
     def __init__(self):
@@ -55,4 +56,31 @@ class LitAutoEncoder(pl.LightningModule):
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=1e-3)
         return optimizer
+
+class ImagenetTransferLearning(pl.LightningModule):
+    def __init__(self):
+        super().__init__()
+
+        # init a pretrained resnet
+        backbone = models.resnet50(weights="DEFAULT")
+        num_filters = backbone.fc.in_features
+        layers = list(backbone.children())[:-1]
+        self.feature_extractor = nn.Sequential(*layers)
+
+        # use the pretrained model to classify cifar10
+        num_target_classes = 10
+        self.classfier = nn.Linear(num_filters, num_target_classes)
+
+    def forward(self, x):
+        self.feature_extractor.eval()
+        with torch.no_grad():
+            representations = self.feature_extractor(x).flatten(1)
+        x = self.classifier(representations)
+        return x
+
+    def training_step(self, batch, batch_idx):
+        x, y = batch
+
+    def configure_optimizers(self):
+        return None
 
