@@ -7,6 +7,7 @@ import os
 import torch
 import torch.utils.data as data
 from lightning.pytorch.callbacks.early_stopping import EarlyStopping
+from argparse import ArgumentParser
 
 def train_and_save():
 
@@ -44,13 +45,13 @@ def load_and_test():
     checkpoint = torch.load("C:/Users/student/masters_project/model.ckpt")
     print(checkpoint["hyper_parameters"])
 
-def early_stop():
+def early_stop(args):
 
     transform = transforms.ToTensor()
     train_set = datasets.MNIST(root="MNIST", download=True, train=True, transform=transform)
 
     # use 20% of training data for validation
-    train_set_size = int(len(train_set) * 0.8)
+    train_set_size = int(len(train_set) * args.percent_split)
     valid_set_size = len(train_set) - train_set_size
 
     # split the train set into two
@@ -59,18 +60,18 @@ def early_stop():
 
     autoencoder = LitAutoEncoder(Encoder(), Decoder())
 
-    trainer = pl.Trainer(callbacks=[EarlyStopping(monitor="val_loss", mode="min")], max_epochs=1)
+    trainer = pl.Trainer(callbacks=[EarlyStopping(monitor="val_loss", mode="min")], fast_dev_run=args.fast_dev_run, max_epochs=args.max_epochs)
 
-    trainer.fit(model=autoencoder, train_dataloaders=DataLoader(train_set), val_dataloaders=DataLoader(valid_set))
+    trainer.fit(model=autoencoder, train_dataloaders=DataLoader(train_set, num_workers=7), val_dataloaders=DataLoader(valid_set, num_workers=7))
 
 def image_net():
 
     transform = transforms.ToTensor()
     # Fit
-    train_set = datasets.CIFAR10(root="CIFAR10", download=True, train=True, transform=transform)
+    # train_set = datasets.CIFAR10(root="CIFAR10", download=True, train=True, transform=transform)
     model = ImagenetTransferLearning()
     trainer = pl.Trainer(max_epochs=1)
-    trainer.fit(model, train_dataloaders=DataLoader(train_set))
+    trainer.fit(model)#, train_dataloaders=DataLoader(train_set))
 
 def image_net_predict():
 
@@ -87,4 +88,12 @@ def image_net_predict():
     
 
 if __name__ == '__main__':
-    image_net_predict()
+    parser = ArgumentParser()
+
+    # trainer arguments
+    parser.add_argument("--max_epochs", type=int, default=1)
+    parser.add_argument("--percent_split", type=float, default=0.8)
+    parser.add_argument("--fast_dev_run", type=int, default=0)
+
+    args = parser.parse_args()
+    early_stop(args)

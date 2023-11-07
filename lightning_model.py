@@ -23,6 +23,7 @@ class Decoder(nn.Module):
 class LitAutoEncoder(pl.LightningModule):
     def __init__(self, encoder, decoder):
         super().__init__()
+        # self.example_input_array = torch.Tensor(32, 1, 28, 28)
         self.save_hyperparameters()
         self.encoder = encoder
         self.decoder = decoder
@@ -77,10 +78,4 @@ class ImagenetTransferLearning(pl.LightningModule):
             representations = self.feature_extractor(x).flatten(1)
         x = self.classifier(representations)
         return x
-
-    def training_step(self, batch, batch_idx):
-        x, y = batch
-
-    def configure_optimizers(self):
-        return None
 
